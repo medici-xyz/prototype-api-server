@@ -14,4 +14,4 @@ pub const url: &str = "http://localhost:8000/subgraphs/name/wighawag/eip721-subg
 // }
 // "#;
 
-pub const query: &str = r#""query": "{\n  tokenContracts(orderBy: numOwners, orderDirection: desc, first: 100) {\n    id\n    name\n    numTokens\n    numOwners\n    supportsEIP721Metadata\n  }\n}""#;
+pub const query: &str = r#" "query": "{\ntokenContracts(orderBy: numOwners, orderDirection: desc, first: 100) {\nid\nname\nnumTokens\nnumOwners\nsupportsEIP721Metadata\n}\n}""#;
