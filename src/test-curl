@@ -1,0 +1,4 @@
+curl -X POST -H "Content-Type: application/json" --data
+
+{ "query": "{
+    tokenContracts(orderBy: numOwners, orderDirection: desc) { id\n    name\n    numTokens\n    numOwners\n    supportsEIP721Metadata\n  }\n}"}' http://localhost:8000/subgraphs/name/wighawag/eip721-subgraph”
