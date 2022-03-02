@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate rocket;
 
+mod cors;
 mod secrets;
 
 use reqwest::Client as reqwestClient;
 
+use crate::cors::Cors;
 use crate::secrets::{query, url};
 
 async fn make_post_request() -> String {
@@ -22,6 +24,7 @@ async fn collections() -> String {
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
     rocket::build()
+        .attach(Cors)
         .mount("/", routes![collections])
         .launch()
         .await
