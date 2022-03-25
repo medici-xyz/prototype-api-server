@@ -1,15 +1,11 @@
 use itertools::Itertools;
-use postgres::{Client as PostgresClient, error::Error as PostgresError};
+use postgres::{error::Error as PostgresError, Client as PostgresClient};
 use rocket::response::Responder;
 use serde_json::to_string as to_json;
-use uuid::Uuid;
 
-use crate::{data_structures::MakeOrderStorageStruct, secrets::{ORDER_TABLE_NAME}};
+use crate::{ds::MakeOrderStorageStruct, secrets::ORDER_TABLE_NAME};
 
-pub fn add_order_table_if_not_exists(
-    client: &mut PostgresClient
-) -> Result<(), PostgresError> {
-
+pub fn add_order_table_if_not_exists(client: &mut PostgresClient) -> Result<(), PostgresError> {
     let query_string = format!(
         "CREATE TABLE IF NOT EXISTS {} (
             uuid TEXT PRIMARY KEY,
@@ -35,7 +31,6 @@ pub fn add_collection_to_table(
     fields: Vec<&str>,
     make_order: MakeOrderStorageStruct,
 ) -> Result<(), PostgresError> {
-    
     add_order_table_if_not_exists(client)?;
 
     let fields_str = fields.iter().join(",");
@@ -61,7 +56,7 @@ pub fn add_collection_to_table(
             &make_order.order_data.end_time.to_string(),
             &make_order.order_data.is_order_ask,
             &make_order.signed_msg.to_string(),
-            &to_json(&make_order.order_data).unwrap()
+            &to_json(&make_order.order_data).unwrap(),
         ],
     )?;
     Ok(())
@@ -70,9 +65,8 @@ pub fn add_collection_to_table(
 pub fn fetch_orders_from_table(
     client: &mut PostgresClient,
     collection: String,
-    token: String
+    token: String,
 ) -> Result<String, PostgresError> {
-    
     let query_string = format!(
         "
         SELECT row_to_json(t)
@@ -93,19 +87,14 @@ pub fn fetch_orders_from_table(
                 token_id=\"{}\"
         ) t;
         ",
-        ORDER_TABLE_NAME,
-        collection,
-        token
+        ORDER_TABLE_NAME, collection, token
     );
     client.execute(&query_string, &[])?;
 
     Ok("".to_string())
 }
 
-pub fn fetch_all_orders_from_table(
-    client: &mut PostgresClient,
-) -> Result<String, PostgresError> {
-    
+pub fn fetch_all_orders_from_table(client: &mut PostgresClient) -> Result<String, PostgresError> {
     let query_string = format!(
         "
         SELECT row_to_json(t)

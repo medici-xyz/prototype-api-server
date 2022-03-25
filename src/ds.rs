@@ -1,4 +1,4 @@
-use ethereum_types::{U256, Signature};
+use ethereum_types::{Signature, U256};
 use serde::{Deserialize, Serialize};
 
 type EthAddress = String;

@@ -16,9 +16,11 @@ postgres = "0.19.2"
 itertools = "0.10.3"
 ethereum-types = "0.13.1"
 uuid = { version = "0.8.2", features = ["v4"]}
+diesel = { version = "1.4.8", features = ["postgres", "serde_json"]}
+diesel_migrations = "1.4.0"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"
 default-features = false
-features = ["postgres_pool"]
+features = ["diesel_postgres_pool"]
 
