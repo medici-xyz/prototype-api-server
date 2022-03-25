@@ -21,7 +21,7 @@ pub fn add_order_table_if_not_exists(
             is_order_ask TEXT NOT NULL,
             signed_msg TEXT NOT NULL
             makerorder JSON NOT NULL,
-        )",
+        );",
         ORDER_TABLE_NAME
     );
 
@@ -42,7 +42,7 @@ pub fn add_collection_to_table(
 
     let query_string = format!(
         "INSERT INTO {} ({})
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);",
         ORDER_TABLE_NAME, fields_str
     );
 
@@ -75,20 +75,23 @@ pub fn fetch_orders_from_table(
     
     let query_string = format!(
         "
-        SELECT
-            signer,
-            colletion,
-            price,
-            token_id,
-            end_time,
-            is_order_ask,
-            signed_msg,
-            makeorder_struct
-        FROM
-            {}
-        WHERE
-            collection=\"{}\" AND
-            token_id=\"{}\";
+        SELECT row_to_json(t)
+        FROM (
+            SELECT
+                signer,
+                colletion,
+                price,
+                token_id,
+                end_time,
+                is_order_ask,
+                signed_msg,
+                makeorder_struct
+            FROM
+                {}
+            WHERE
+                collection=\"{}\" AND
+                token_id=\"{}\"
+        ) t;
         ",
         ORDER_TABLE_NAME,
         collection,
@@ -118,7 +121,7 @@ pub fn fetch_all_orders_from_table(
                 makeorder_struct
             FROM
                 {}
-        ) t
+        ) t;
         ",
         ORDER_TABLE_NAME,
     );
