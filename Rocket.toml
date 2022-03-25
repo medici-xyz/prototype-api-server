@@ -4,3 +4,4 @@ port = 2888
 keep_alive = 5
 read_timeout = 5
 write_timeout = 5
+orders_db = { url = "postgresql://indexertest:Whenitwasfirstreleasedin1962@database-1.clt88qoqwajf.us-east-1.rds.amazonaws.com:5432/indexer" }
