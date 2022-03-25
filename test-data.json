@@ -1,0 +1,18 @@
+{
+	"signed_msg": "0x21fbf0696d5e0aa2ef41a2b4ffb623bcaf070461d61cf7251c74161f82fec3a4370854bc0a34b3ab487c1bc021cd318c734c51ae29374f2beb0e6f2dd49b4bf41c",
+	"order_data": {
+		"is_order_ask": true,
+		"signer": "0x76e01859d6cf4a8637350bdb81e3cef71e29b7c2",
+		"collection": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"price": "21",
+		"token_id": "4",
+		"amount": "1",
+		"strategy": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"currency": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"nonce": "1",
+		"start_time": "10000",
+		"end_time": "100000000",
+		"min_percentage_to_ask": "2",
+		"params": ""
+	}
+}

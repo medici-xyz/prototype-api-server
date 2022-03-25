@@ -44,5 +44,4 @@ fn rocket() -> _ {
         .attach(Cors)
         .mount("/", routes![collections, collection])
         .attach(diesel_postgres::stage())
-    // .mount("/", routes![collections, collection, makeorder, view_orders, view_all_orders])
 }

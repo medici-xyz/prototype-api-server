@@ -3,7 +3,7 @@ use rocket::fairing::AdHoc;
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket};
 use rocket_sync_db_pools::database;
-use serde_json::to_value;
+use serde_json::{to_string, to_value, Value as JsonValue};
 
 use crate::ds::MakeOrderStorageStruct;
 use crate::models::Orders;
@@ -54,27 +54,50 @@ async fn makeorder(conn: OrdersDb, order: Json<MakeOrderStorageStruct>) {
         };
         diesel::insert_into(orders::table)
             .values(new_order)
-            .execute(c);
+            .execute(c)
+            .expect("inserting into table failed");
     })
     .await;
 }
 #[get("/vieworders/<collection_id>/<token>")]
-async fn view_orders(conn: OrdersDb, collection_id: String, token: String) {
-    conn.run(|c| {
-        let all_orders = orders
-            .filter(collection.eq(collection_id))
-            .filter(token_id.eq(token))
-            .load::<Orders>(c);
-    })
-    .await;
+async fn view_orders(conn: OrdersDb, collection_id: String, token: String) -> String {
+    let return_data = conn
+        .run(|c| {
+            let all_orders = orders
+                .filter(collection.eq(collection_id))
+                .filter(token_id.eq(token))
+                .filter(active.eq(true))
+                .load::<Orders>(c)
+                .expect("fetching orders failed");
+            let mut relevant_fields = Vec::new();
+
+            for order in all_orders {
+                relevant_fields.push((order.signed_msg, order.makerorder))
+            }
+
+            relevant_fields
+        })
+        .await;
+
+    to_string(&return_data).expect("error in converting fetched data to JSON")
 }
 
 #[get("/viewallorders")]
-async fn view_all_orders(conn: OrdersDb) {
-    conn.run(|c| {
-        let all_orders = orders.load::<Orders>(c);
-    })
-    .await;
+async fn view_all_orders(conn: OrdersDb) -> String {
+    let return_data = conn
+        .run(|c| {
+            let all_orders = orders.load::<Orders>(c).expect("fetching orders failed");
+            let mut relevant_fields = Vec::new();
+
+            for order in all_orders {
+                relevant_fields.push((order.signed_msg, order.makerorder))
+            }
+
+            relevant_fields
+        })
+        .await;
+
+    to_string(&return_data).expect("error in converting fetched data to JSON")
 }
 
 pub fn stage() -> AdHoc {
@@ -82,6 +105,6 @@ pub fn stage() -> AdHoc {
         rocket
             .attach(OrdersDb::fairing())
             .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
-            .mount("/", routes![makeorder, view_all_orders])
+            .mount("/", routes![makeorder, view_all_orders, view_orders])
     })
 }
