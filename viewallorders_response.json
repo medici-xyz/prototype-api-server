@@ -1,1 +1,17 @@
-[["0x21fb…f41c",{"amount":"0x1","collection":"0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4","currency":"0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4","end_time":"0x100000000","is_order_ask":true,"min_percentage_to_ask":"0x2","nonce":"0x1","params":"","price":"0x21","signer":"0x76e01859d6cf4a8637350bdb81e3cef71e29b7c2","start_time":"0x10000","strategy":"0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4","token_id":"0x4"}]]
+[
+	["0x21fb…f41c", {
+		"amount": "0x1",
+		"collection": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"currency": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"end_time": "0x100000000",
+		"is_order_ask": true,
+		"min_percentage_to_ask": "0x2",
+		"nonce": "0x1",
+		"params": "",
+		"price": "0x21",
+		"signer": "0x76e01859d6cf4a8637350bdb81e3cef71e29b7c2",
+		"start_time": "0x10000",
+		"strategy": "0x5451fd4f345cf6237eea32dd2cfc3ce6ca4ba2c4",
+		"token_id": "0x4"
+	}]
+]
