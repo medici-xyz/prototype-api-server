@@ -3,7 +3,7 @@ use rocket::fairing::AdHoc;
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket};
 use rocket_sync_db_pools::database;
-use serde_json::{to_string, to_value, Value as JsonValue};
+use serde_json::{to_string, to_value};
 
 use crate::ds::MakeOrderStorageStruct;
 use crate::models::Orders;
@@ -11,9 +11,6 @@ use crate::schema::orders::dsl::*;
 
 #[database("orders_db")]
 pub struct OrdersDb(diesel::PgConnection);
-
-#[get("/")]
-pub async fn main_route(conn: OrdersDb) {}
 
 async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     // This macro from `diesel_migrations` defines an `embedded_migrations`
@@ -48,7 +45,7 @@ async fn makeorder(conn: OrdersDb, order: Json<MakeOrderStorageStruct>) {
             amount: order_struct.order_data.amount.to_string(),
             end_time: order_struct.order_data.end_time.to_string(),
             is_order_ask: order_struct.order_data.is_order_ask,
-            signed_msg: order_struct.signed_msg.to_string(),
+            signed_msg: format!("{:#?}", order_struct.signed_msg),
             active: true,
             makerorder: to_value(&order_struct.order_data).unwrap(),
         };
