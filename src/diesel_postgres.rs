@@ -1,13 +1,16 @@
 use diesel::prelude::*;
+use ethsign::{PublicKey, Signature};
 use rocket::fairing::AdHoc;
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket};
 use rocket_sync_db_pools::database;
 use serde_json::{to_string, to_value};
 
-use crate::ds::MakeOrderStorageStruct;
-use crate::models::Orders;
+use crate::ds::{MakeOrderStorageStruct, UserAuthenticationSetup};
+use crate::models::{Auth, Orders};
+use crate::schema::auth::dsl::*;
 use crate::schema::orders::dsl::*;
+use web3::signing::{keccak256, recover};
 
 #[database("orders_db")]
 pub struct OrdersDb(diesel::PgConnection);
@@ -26,6 +29,64 @@ async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
         .expect("diesel migrations");
 
     rocket
+}
+
+pub fn eth_message(message: String) -> [u8; 32] {
+    keccak256(
+        format!(
+            "{}{}{}",
+            "\x19Ethereum Signed Message:\n",
+            message.len(),
+            message
+        )
+        .as_bytes(),
+    )
+}
+
+#[post("/auth", format = "json", data = "<authdata>")]
+async fn register_user(conn: OrdersDb, authdata: Json<UserAuthenticationSetup>) {
+    use crate::schema::auth;
+
+    let authdata = authdata.into_inner();
+
+    // TODO: verify that the address calculated from the pubkey is the same
+    // as the one passed through - otherwise throw an error
+    // let address = public_key.address();
+
+    let signature = hex::decode(authdata.signature).unwrap();
+    let message = eth_message(authdata.signed_msg);
+    let pubkey = recover(&message, &signature[..64], 0).unwrap();
+    let pubkey = format!("{:02X?}", pubkey);
+
+    if pubkey != authdata.user_pubkey.to_string() {
+        // TODO: THROW ERROR
+    }
+
+    conn.run(move |c| {
+        let results: Vec<String> = auth
+            .select(user_address)
+            .filter(user_address.eq(authdata.user_address.to_string()))
+            .load::<String>(c)
+            .unwrap();
+
+        if results.len() == 0 {
+            let new_login = Auth {
+                user_pubkey: authdata.user_pubkey.to_string(),
+                user_address: authdata.user_address.to_string(),
+                email: authdata.email.clone(),
+                twitter: authdata.twitter.clone(),
+            };
+            diesel::insert_into(auth::table)
+                .values(new_login)
+                .execute(c)
+                .expect("inserting into table failed");
+        } else {
+            // TODO: return saying that user has already been registered
+        }
+    })
+    .await;
+
+    // TODO: should we return something?
 }
 
 #[post("/makeorder", format = "json", data = "<order>")]
@@ -102,6 +163,9 @@ pub fn stage() -> AdHoc {
         rocket
             .attach(OrdersDb::fairing())
             .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
-            .mount("/", routes![makeorder, view_all_orders, view_orders])
+            .mount(
+                "/",
+                routes![makeorder, view_all_orders, view_orders, register_user],
+            )
     })
 }

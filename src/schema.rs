@@ -1,4 +1,13 @@
 table! {
+    auth (user_pubkey) {
+        user_pubkey -> Varchar,
+        user_address -> Varchar,
+        email -> Nullable<Text>,
+        twitter -> Nullable<Text>,
+    }
+}
+
+table! {
     orders (uuid) {
         uuid -> Varchar,
         signer -> Text,
@@ -13,3 +22,8 @@ table! {
         active -> Bool,
     }
 }
+
+allow_tables_to_appear_in_same_query!(
+    auth,
+    orders,
+);
