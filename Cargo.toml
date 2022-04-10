@@ -21,6 +21,7 @@ diesel_migrations = "1.4.0"
 ethsign = "0.8.0"
 web3 = "0.18.0"
 hex = "0.4.3"
+thiserror = "1.0.30"
 
 [dependencies.rocket_sync_db_pools]
 version = "0.1.0-rc.1"

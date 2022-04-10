@@ -8,34 +8,57 @@ extern crate diesel_migrations;
 mod cors;
 mod diesel_postgres;
 mod ds;
+mod error_logging;
 mod models;
 mod schema;
 mod secrets;
 
-use postgres::Client as PostgresClient;
 use reqwest::Client as reqwestClient;
 use rocket::routes;
-use rocket_sync_db_pools::database;
+use tokio::sync::mpsc;
 
 use crate::cors::Cors;
+use crate::error_logging::throw_json_error;
 use crate::secrets::{query, url};
 
-async fn make_post_request(query_string: String) -> String {
+async fn make_post_request(query_string: String, mut origin: Vec<&str>) -> Result<String, String> {
     let client = reqwestClient::new();
+    origin.push("make_post_reqwest");
 
-    let res = client.post(url).body(query_string).send().await.unwrap();
-    res.text().await.unwrap()
+    let res = client
+        .post(url)
+        .body(query_string)
+        .send()
+        .await
+        .map_err(|_| {
+            throw_json_error(
+                "reqwest",
+                &origin,
+                "main",
+                "28",
+                "failed to send POST request to graphql indexer",
+            )
+        })?;
+    res.text().await.map_err(|_| {
+        throw_json_error(
+            "reqwest",
+            &origin,
+            "main",
+            "42",
+            "failed to extract text from graphql indexer response",
+        )
+    })
 }
 
 #[get("/collections")]
-async fn collections() -> String {
-    make_post_request(query.to_string()).await
+async fn collections() -> Result<String, String> {
+    Ok(make_post_request(query.to_string(), vec!["collections"]).await?)
 }
 
 #[get("/collection/<name>")]
-async fn collection(name: String) -> String {
+async fn collection(name: String) -> Result<String, String> {
     let collection_query = format!("{{\n\"query\": \"{{tokenContract(id: \\\"{}\\\") {{id name numTokens numOwners tokens(orderBy:mintTime,orderDirection: asc){{ id tokenURI tokenID mintTime owner {{ id }}}}}}}}\"}}", name);
-    make_post_request(collection_query).await
+    Ok(make_post_request(collection_query, vec!["collection"]).await?)
 }
 
 #[launch]
