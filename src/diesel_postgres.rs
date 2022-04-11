@@ -88,8 +88,8 @@ async fn register_user(
         ));
     }
 
-    let postgres_write: Result<(), String> = conn.run(move |c| {
-        let results: Vec<String> = auth
+    conn.run(move |c| {
+        let results = auth
             .select(user_address)
             .filter(user_address.eq(authdata.user_address.to_string()))
             .load::<String>(c)
@@ -126,10 +126,12 @@ async fn register_user(
         else {
         // TODO: return saying that user has already been registered
         }
-    })?.await?;
 
-    postgres_write
+        Ok::<(), String>(())
+    }).await?;
+
     // TODO: should we return something?
+    Ok(())
 }
 
 #[post("/makeorder", format = "json", data = "<order>")]
@@ -139,7 +141,7 @@ async fn makeorder(conn: OrdersDb, order: Json<MakeOrderStorageStruct>) -> Resul
     let order_struct = order.into_inner();
     let new_uuid = ::uuid::Uuid::new_v4().to_simple().to_string();
 
-    let postgres_fetch: Result<(), String> = conn.run(move |c| {
+    conn.run(move |c| {
         let new_order = Orders {
             uuid: new_uuid,
             signer: order_struct.order_data.signer.clone(),
@@ -172,11 +174,11 @@ async fn makeorder(conn: OrdersDb, order: Json<MakeOrderStorageStruct>) -> Resul
                     "163",
                     "failed to insert makeorder into table",
                 )
-            })?;
+            })
     })
     .await?;
 
-    postgres_fetch
+    Ok(())
 }
 
 #[get("/vieworders/<collection_id>/<token>")]
@@ -185,9 +187,12 @@ async fn view_orders(
     collection_id: String,
     token: String,
 ) -> Result<String, String> {
-    let return_data = conn
-        .run(|c| {
-            let all_orders = orders
+    let path_str = format!("vieworders/{}/{}", collection_id, token);
+    let path_str_clone = path_str.clone();
+
+    let all_orders = conn
+        .run(move |c| {
+            orders
                 .filter(collection.eq(collection_id))
                 .filter(token_id.eq(token))
                 .filter(active.eq(true))
@@ -195,57 +200,54 @@ async fn view_orders(
                 .map_err(|c| {
                     throw_json_error(
                         "Diesel",
-                        &vec![format!("vieworders/{}/{}", collection_id, token).as_str()],
+                        &vec![path_str.as_str()],
                         "diesel_postgres",
                         "187",
                         "failed to fetch orders from Postgres",
                     )
-                })?;
-            let mut relevant_fields = Vec::new();
-
-            for order in all_orders {
-                relevant_fields.push((order.signed_msg, order.makerorder))
-            }
-
-            relevant_fields
+                })
         })
         .await?;
 
-    to_string(&return_data).map_err(|c| {
+    let mut relevant_fields = Vec::new();
+
+    for order in all_orders {
+        relevant_fields.push((order.signed_msg, order.makerorder))
+    }
+
+    to_string(&relevant_fields).map_err(|_| {
         throw_json_error(
             "Serde",
-            &vec![format!("vieworders/{}/{}", collection_id, token).as_str()],
+            &vec![path_str_clone.as_str()],
             "diesel_postgres",
             "206",
             "error in converting fetched data to JSON",
         )
-    })?;
+    })
 }
 
 #[get("/viewallorders")]
-async fn view_all_orders(conn: OrdersDb) -> String {
-    let return_data = conn
+async fn view_all_orders(conn: OrdersDb) -> Result<String, String> {
+    let all_orders = conn
         .run(|c| {
-            let all_orders = orders.load::<Orders>(c).map_err(|c| {
-                    throw_json_error(
-                        "Diesel",
-                        &vec!["view_all_orders"],
-                        "diesel_postgres",
-                        "229",
-                        "failed to fetch orders from Postgres",
-                    )
-                })?;
-            let mut relevant_fields = Vec::new();
-
-            for order in all_orders {
-                relevant_fields.push((order.signed_msg, order.makerorder))
-            }
-
-            relevant_fields
+            orders.load::<Orders>(c).map_err(|c| {
+                throw_json_error(
+                    "Diesel",
+                    &vec!["view_all_orders"],
+                    "diesel_postgres",
+                    "229",
+                    "failed to fetch orders from Postgres",
+                )
+            })
         })
-        .await;
+        .await?;
+    let mut relevant_fields = Vec::new();
 
-    to_string(&return_data).map_err(|c| {
+    for order in all_orders {
+        relevant_fields.push((order.signed_msg, order.makerorder))
+    }
+
+    to_string(&relevant_fields).map_err(|_| {
         throw_json_error(
             "Serde",
             &vec!["view_all_orders"],
@@ -253,8 +255,7 @@ async fn view_all_orders(conn: OrdersDb) -> String {
             "240",
             "error in converting fetched data to JSON",
         )
-    })?;
-
+    })
 }
 
 pub fn stage() -> AdHoc {
@@ -262,9 +263,6 @@ pub fn stage() -> AdHoc {
         rocket
             .attach(OrdersDb::fairing())
             .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
-            .mount(
-                "/",
-                routes![makeorder]
-            )
+            .mount("/", routes![makeorder, view_all_orders, view_orders, auth])
     })
 }
