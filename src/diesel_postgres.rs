@@ -263,6 +263,6 @@ pub fn stage() -> AdHoc {
         rocket
             .attach(OrdersDb::fairing())
             .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
-            .mount("/", routes![makeorder, view_all_orders, view_orders, auth])
+            .mount("/", routes![makeorder, view_all_orders, view_orders, register_user])
     })
 }
