@@ -19,7 +19,7 @@ use tokio::sync::mpsc;
 
 use crate::cors::Cors;
 use crate::error_logging::throw_json_error;
-use crate::secrets::{query, url};
+use crate::secrets::{query, url, lyraquery};
 
 async fn make_post_request(query_string: String, mut origin: Vec<&str>) -> Result<String, String> {
     let client = reqwestClient::new();
@@ -61,10 +61,15 @@ async fn collection(name: String) -> Result<String, String> {
     Ok(make_post_request(collection_query, vec!["collection"]).await?)
 }
 
+#[get("/lyracollections")]
+async fn lyracollections() -> Result<String, String> {
+    Ok(make_post_request(lyraquery.to_string(), vec!["lyracollections"]).await?)
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(Cors)
-        .mount("/", routes![collections, collection])
+        .mount("/", routes![collections, collection, lyracollections])
         .attach(diesel_postgres::stage())
 }
