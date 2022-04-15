@@ -262,7 +262,7 @@ pub fn stage() -> AdHoc {
     AdHoc::on_ignite("Diesel Postgres Stage", |rocket| async {
         rocket
             .attach(OrdersDb::fairing())
-            .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
+            // .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
             .mount("/", routes![makeorder, view_all_orders, view_orders, register_user])
     })
 }
