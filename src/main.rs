@@ -12,15 +12,17 @@ mod error_logging;
 mod models;
 mod schema;
 mod secrets;
+mod utils;
 
 use reqwest::Client as reqwestClient;
 use rocket::routes;
 use tokio::sync::mpsc;
+use rocket::http::Status;
 
 use crate::cors::Cors;
 use crate::error_logging::throw_json_error;
 use crate::secrets::{query, url, lyraquery};
-use rocket::http::Status;
+use crate::utils::filter_collections_for_lyra_mints;
 
 async fn make_post_request(query_string: String, mut origin: Vec<&str>) -> Result<String, String> {
     let client = reqwestClient::new();
@@ -64,7 +66,8 @@ async fn collection(name: String) -> Result<String, String> {
 
 #[get("/lyracollections")]
 async fn lyracollections() -> Result<String, String> {
-    Ok(make_post_request(lyraquery.to_string(), vec!["lyracollections"]).await?)
+    let response = make_post_request(lyraquery.to_string(), vec!["lyracollections"]).await?;
+    Ok(filter_collections_for_lyra_mints(response))
 }
 
 #[get("/health-check")]

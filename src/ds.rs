@@ -35,3 +35,32 @@ pub struct UserAuthenticationSetup {
     pub email: Option<String>,
     pub twitter: Option<String>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LyraJson {
+    pub data: Data
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Data {
+    pub tokenContracts: Vec<TokenContracts>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TokenContracts {
+    pub id: String,
+    pub supportsEIP721Metadata: bool,
+    pub tokens: Vec<Tokens>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Tokens {
+    pub tokenID: String,
+    pub owner: Owner,
+    pub tokenURI: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Owner {
+    pub id: String,
+}
