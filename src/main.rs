@@ -76,6 +76,6 @@ async fn health_check() -> Status {
 fn rocket() -> _ {
     rocket::build()
         .attach(Cors)
-        .mount("/", routes![collections, collection, lyracollections])
+        .mount("/", routes![collections, collection, lyracollections, health_check])
         .attach(diesel_postgres::stage())
 }
