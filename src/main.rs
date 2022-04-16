@@ -20,6 +20,7 @@ use tokio::sync::mpsc;
 use crate::cors::Cors;
 use crate::error_logging::throw_json_error;
 use crate::secrets::{query, url, lyraquery};
+use rocket::http::Status;
 
 async fn make_post_request(query_string: String, mut origin: Vec<&str>) -> Result<String, String> {
     let client = reqwestClient::new();
@@ -64,6 +65,11 @@ async fn collection(name: String) -> Result<String, String> {
 #[get("/lyracollections")]
 async fn lyracollections() -> Result<String, String> {
     Ok(make_post_request(lyraquery.to_string(), vec!["lyracollections"]).await?)
+}
+
+#[get("/health-check")]
+async fn health_check() -> Status {
+    Status::Ok
 }
 
 #[launch]
