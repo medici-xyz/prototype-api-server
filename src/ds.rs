@@ -53,14 +53,14 @@ pub struct TokenContracts {
     pub tokens: Vec<Tokens>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tokens {
     pub tokenID: String,
     pub owner: Owner,
     pub tokenURI: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Owner {
     pub id: String,
 }
